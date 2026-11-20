@@ -25,25 +25,30 @@ export function LiveFeed() {
   }, []);
 
   if (events.length === 0) {
-     return <div className="text-slate-500 italic animate-pulse text-xs text-center mt-10">Listening for telemetry...</div>;
+     return (
+       <div className="flex items-center justify-center gap-2 text-muted text-sm mt-10">
+         <span className="dot live text-accent" />
+         Listening for telemetry…
+       </div>
+     );
   }
 
   return (
-    <div className="flex-1 overflow-y-auto font-mono text-xs space-y-2 pr-2">
+    <ul className="flex-1 overflow-y-auto font-mono text-xs flex flex-col gap-2 pr-2">
       {events.map((ev) => {
-        const timeString = new Date(ev.timestamp).toLocaleTimeString('en-US', { hour12: false });
+        const timeString = new Date(ev.timestamp).toLocaleTimeString('en-GB', { hour12: false, timeZone: 'Asia/Kolkata' });
         return (
-            <div key={ev.id} className="flex items-center gap-2">
-                <span className="text-cyan-500 shrink-0">[{timeString}]</span>
+            <li key={ev.id} className="flex items-center gap-2.5 min-w-0">
+                <span className="text-muted shrink-0">{timeString}</span>
                 {ev.is_bot ? (
-                    <span className="text-rose-500 font-bold shrink-0">BOT</span>
+                    <span className="shrink-0 w-10 text-center rounded-full border border-accent bg-accent-soft text-accent text-[10px] leading-[16px]">bot</span>
                 ) : (
-                    <span className="text-emerald-400 shrink-0">IN</span>
+                    <span className="shrink-0 w-10 text-center rounded-full border border-line text-fg text-[10px] leading-[16px]">in</span>
                 )}
-                <span className="text-slate-300 truncate">{ev.path}</span>
-            </div>
+                <span className="text-fg truncate">{ev.path}</span>
+            </li>
         );
       })}
-    </div>
+    </ul>
   );
 }

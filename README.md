@@ -103,6 +103,9 @@ ADMIN_TOTP_SECRET=[GENERATED_BASE32_KEY]
 
 # Uptime cron (vercel.json runs /api/cron/ping daily; the route refuses to run without it)
 CRON_SECRET=[RANDOM_STRING]
+
+# Frost desktop / Frost Mobile cards (/api/widget/summary): a read-only bearer token
+WIDGET_TOKEN=[RANDOM_STRING]
 ```
 
 ### Ignition Sequence

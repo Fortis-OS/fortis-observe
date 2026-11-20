@@ -1,46 +1,28 @@
 import { Activity, ShieldAlert, Users, Footprints, LogOut, Timer } from "lucide-react";
 import { LiveFeed } from "@/components/LiveFeed";
-import { supabaseAdmin } from "@/lib/supabase";
-import { fetchAll } from "@/lib/fetchAll";
+import { getLast24Hours } from "@/lib/hourly";
 import { getSiteStatus } from "@/lib/status";
 import { statusColor } from "@/lib/siteStatus";
 import { PageHeader, Chip, Caption, Metric, BarList, RangeChips } from "@/components/ui";
 import { parseRange, delta, formatDuration } from "@/lib/range";
 import { getOverview, getTop, type Overview } from "@/lib/stats";
 import { Chronos } from "@/components/command/Chronos";
-import { HourStrip, type HourBucket } from "@/components/command/HourStrip";
+import { HourStrip } from "@/components/command/HourStrip";
 
 export const dynamic = 'force-dynamic';
-
-const HOUR = 3600 * 1000;
-
-function istHour(ms: number) {
-  return Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Kolkata", hour: "2-digit", hourCycle: "h23" }).format(ms));
-}
 
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 
 // Data loading lives outside the component: it reads the clock, which a render must not do.
 async function loadDashboard(rangeParam: string | string[] | undefined) {
   const range = parseRange(rangeParam, "7d");
-  const now = Date.now();
-  const thisHourStart = Math.floor(now / HOUR) * HOUR;
-  const dayStart = thisHourStart - 23 * HOUR;
 
-  const [overview, previous, topSources, dayEvents] = await Promise.all([
+  const [overview, previous, topSources, buckets] = await Promise.all([
     getOverview(range.from, range.to),
     range.prev ? getOverview(range.prev.from, range.prev.to) : Promise.resolve(null),
     getTop("isp", range.from, range.to, 5),
-    fetchAll<{ timestamp: string; is_bot: boolean }>((from, to) =>
-      supabaseAdmin.from('events').select('timestamp, is_bot').gte('timestamp', new Date(dayStart).toISOString()).order('id').range(from, to)),
+    getLast24Hours(),
   ]);
-
-  // Last 24 hours, one bucket per hour (oldest first, current hour last)
-  const buckets: HourBucket[] = Array.from({ length: 24 }, (_, i) => ({ hour: istHour(dayStart + i * HOUR), human: 0, bot: 0 }));
-  dayEvents.forEach(ev => {
-    const i = Math.floor((new Date(ev.timestamp).getTime() - dayStart) / HOUR);
-    if (i >= 0 && i < 24) buckets[i][ev.is_bot ? 'bot' : 'human'] += 1;
-  });
   const dayHuman = buckets.reduce((a, b) => a + b.human, 0);
   const dayBot = buckets.reduce((a, b) => a + b.bot, 0);
 

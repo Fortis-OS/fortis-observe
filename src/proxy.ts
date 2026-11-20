@@ -14,6 +14,7 @@ export async function proxy(request: NextRequest) {
         pathname === '/api/auth/webauthn/verify-authentication' ||
         pathname.startsWith('/api/telemetry') || // Allow external telemetry
         pathname.startsWith('/api/cron') ||      // Vercel Cron; the route checks CRON_SECRET itself
+        pathname === '/api/widget/summary' ||    // Frost cards; the route checks WIDGET_TOKEN itself
         pathname.startsWith('/_next') || 
         pathname.startsWith('/favicon.ico')
     ) {

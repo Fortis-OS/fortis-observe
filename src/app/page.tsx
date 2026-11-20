@@ -1,10 +1,12 @@
-import { Activity, ShieldAlert, Users, Zap, UserCheck, MapPin } from "lucide-react";
+import { Activity, ShieldAlert, Users, Footprints, LogOut, Timer } from "lucide-react";
 import { LiveFeed } from "@/components/LiveFeed";
 import { supabaseAdmin } from "@/lib/supabase";
 import { fetchAll } from "@/lib/fetchAll";
 import { getSiteStatus } from "@/lib/status";
 import { statusColor } from "@/lib/siteStatus";
-import { PageHeader, Chip, Caption, Metric, BarList } from "@/components/ui";
+import { PageHeader, Chip, Caption, Metric, BarList, RangeChips } from "@/components/ui";
+import { parseRange, delta, formatDuration } from "@/lib/range";
+import { getOverview, getTop, type Overview } from "@/lib/stats";
 import { Chronos } from "@/components/command/Chronos";
 import { HourStrip, type HourBucket } from "@/components/command/HourStrip";
 
@@ -16,46 +18,22 @@ function istHour(ms: number) {
   return Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Kolkata", hour: "2-digit", hourCycle: "h23" }).format(ms));
 }
 
+type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
+
 // Data loading lives outside the component: it reads the clock, which a render must not do.
-async function loadDashboard() {
+async function loadDashboard(rangeParam: string | string[] | undefined) {
+  const range = parseRange(rangeParam, "7d");
   const now = Date.now();
   const thisHourStart = Math.floor(now / HOUR) * HOUR;
   const dayStart = thisHourStart - 23 * HOUR;
 
-  const [
-    { count: sessionCount },
-    { count: eventCount },
-    { count: humanCount },
-    sessionRows,
-    dayEvents,
-  ] = await Promise.all([
-    supabaseAdmin.from('sessions').select('*', { count: 'exact', head: true }),
-    supabaseAdmin.from('events').select('*', { count: 'exact', head: true }),
-    supabaseAdmin.from('events').select('*', { count: 'exact', head: true }).eq('is_bot', false),
-    fetchAll<{ isp: string | null; country: string | null }>((from, to) =>
-      supabaseAdmin.from('sessions').select('isp, country').order('id').range(from, to)),
+  const [overview, previous, topSources, dayEvents] = await Promise.all([
+    getOverview(range.from, range.to),
+    range.prev ? getOverview(range.prev.from, range.prev.to) : Promise.resolve(null),
+    getTop("isp", range.from, range.to, 5),
     fetchAll<{ timestamp: string; is_bot: boolean }>((from, to) =>
       supabaseAdmin.from('events').select('timestamp, is_bot').gte('timestamp', new Date(dayStart).toISOString()).order('id').range(from, to)),
   ]);
-
-  // Top sources (ISP) and top country
-  const ispCounts: Record<string, number> = {};
-  const countryCounts: Record<string, number> = {};
-  sessionRows.forEach(row => {
-    const isp = row.isp && row.isp !== 'Unknown' ? row.isp : 'Other';
-    ispCounts[isp] = (ispCounts[isp] || 0) + 1;
-    if (row.country && row.country !== 'Unknown') {
-      countryCounts[row.country] = (countryCounts[row.country] || 0) + 1;
-    }
-  });
-
-  const topSources = Object.entries(ispCounts)
-    .map(([name, value]) => ({ name, value }))
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 5);
-
-  const [topCountry, topCountryCount] = Object.entries(countryCounts).sort((a, b) => b[1] - a[1])[0] ?? ["—", 0];
-  const located = Object.values(countryCounts).reduce((a, b) => a + b, 0);
 
   // Last 24 hours, one bucket per hour (oldest first, current hour last)
   const buckets: HourBucket[] = Array.from({ length: 24 }, (_, i) => ({ hour: istHour(dayStart + i * HOUR), human: 0, bot: 0 }));
@@ -66,23 +44,17 @@ async function loadDashboard() {
   const dayHuman = buckets.reduce((a, b) => a + b.human, 0);
   const dayBot = buckets.reduce((a, b) => a + b.bot, 0);
 
-  const sessions = sessionCount ?? 0;
-  const events = eventCount ?? 0;
-  const humans = humanCount ?? 0;
-  const humanShare = events > 0 ? humans / events : 0;
-
-  return {
-    sessions, events, humans, humanShare, topSources, topCountry, topCountryCount, located,
-    buckets, dayHuman, dayBot,
-  };
+  return { range, overview, previous, topSources, buckets, dayHuman, dayBot };
 }
 
-export default async function CommandCenter() {
-  const {
-    sessions, events, humans, humanShare, topSources, topCountry, topCountryCount, located,
-    buckets, dayHuman, dayBot,
-  } = await loadDashboard();
+const bounceRate = (o: Overview) => (o.visits > 0 ? o.bounces / o.visits : 0);
+
+export default async function CommandCenter({ searchParams }: { searchParams: SearchParams }) {
+  const { range: rangeParam } = await searchParams;
+  const { range, overview: o, previous: p, topSources, buckets, dayHuman, dayBot } = await loadDashboard(rangeParam);
   const site = await getSiteStatus();
+  const humanShare = o.events > 0 ? o.human_events / o.events : 0;
+  const vs = p ? ` vs ${range.prevLabel}` : "";
 
   return (
     <div className="p-4 md:p-6 flex flex-col gap-6 min-h-full">
@@ -91,6 +63,7 @@ export default async function CommandCenter() {
         subtitle="Telemetry from ganeshangadi.online, as it happens."
         right={
           <>
+            <RangeChips current={range.key} basePath="/" />
             <Chip on><span className="dot live" /> Live</Chip>
             <Chip><ShieldAlert className={`w-3.5 h-3.5 ${statusColor(site.state)}`} /> Site: <span className="font-mono text-fg">{site.label}</span></Chip>
           </>
@@ -103,26 +76,32 @@ export default async function CommandCenter() {
         <Chronos className="lg:col-span-5" />
 
         <section className="glass p-[18px] lg:col-span-7 flex flex-col gap-4">
-          <Caption>Traffic observatory</Caption>
+          <div className="flex items-center justify-between gap-3">
+            <Caption>Traffic observatory</Caption>
+            <span className="caption !tracking-[1.5px] !text-[10px]">{range.label}{vs && <span className="normal-case"> · Δ{vs}</span>}</span>
+          </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-x-5 gap-y-4">
-            <Metric icon={Users} label="Targets" value={sessions} detail="sessions" />
-            <Metric icon={Zap} label="Events" value={events} detail="recorded" />
+            <Metric icon={Users} label="Visitors" value={o.visitors} detail={delta(o.visitors, p?.visitors)} />
+            <Metric icon={Footprints} label="Visits" value={o.visits} detail={delta(o.visits, p?.visits)} />
             <Metric
-              icon={UserCheck}
-              label="Human"
-              value={`${Math.round(humanShare * 100)}%`}
-              detail={humans.toLocaleString()}
-              ratio={humanShare}
+              icon={LogOut}
+              label="Bounce"
+              value={`${Math.round(bounceRate(o) * 100)}%`}
+              detail={p ? delta(Math.round(bounceRate(o) * 100), Math.round(bounceRate(p) * 100), (n) => `${n}%`) : undefined}
+              ratio={bounceRate(o)}
               warnAt={2}
             />
             <Metric
-              icon={MapPin}
-              label="Top region"
-              value={topCountry}
-              detail={located > 0 ? `${Math.round((topCountryCount / located) * 100)}%` : undefined}
-              ratio={located > 0 ? topCountryCount / located : 0}
-              warnAt={2}
+              icon={Timer}
+              label="Avg visit"
+              value={formatDuration(o.avg_visit_ms)}
+              detail={p ? delta(Math.round(o.avg_visit_ms / 1000), Math.round(p.avg_visit_ms / 1000), (n) => formatDuration(n * 1000)) : undefined}
             />
+          </div>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px] text-muted">
+            <span><span className="font-mono text-fg">{o.page_views.toLocaleString()}</span> page views</span>
+            <span><span className="font-mono text-fg">{o.new_visitors.toLocaleString()}</span> new visitors</span>
+            <span><span className="font-mono text-fg">{Math.round(humanShare * 100)}%</span> of {o.events.toLocaleString()} events human</span>
           </div>
 
           <div className="h-px bg-faint" />

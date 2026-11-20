@@ -5,6 +5,7 @@ import { performGlobalSearch } from "./actions";
 import { Search as SearchIcon, Terminal, Activity, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { PageHeader } from "@/components/ui";
+import { place } from "@/lib/place";
 
 export default function SearchPage() {
     const [query, setQuery] = useState("");
@@ -55,10 +56,10 @@ export default function SearchPage() {
                         </h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             {results.sessions.map(s => (
-                                <Link href={`/visitors/${s.id}`} key={s.id} className="glass-soft pressable p-4 flex items-center justify-between gap-3 group hover:!border-accent">
+                                <Link href={`/visitors/${s.visitor_uuid}`} key={s.id} className="glass-soft pressable p-4 flex items-center justify-between gap-3 group hover:!border-accent">
                                     <div className="min-w-0">
                                         <div className="text-fg font-mono text-sm truncate">{s.ip_address}</div>
-                                        <div className="text-muted text-xs mt-1 truncate">{s.city}, {s.country}</div>
+                                        <div className="text-muted text-xs mt-1 truncate">{place(s.city)}, {s.country}</div>
                                     </div>
                                     <ArrowRight className="w-4 h-4 shrink-0 text-muted group-hover:text-accent transition-colors" />
                                 </Link>
@@ -76,7 +77,7 @@ export default function SearchPage() {
                         </h2>
                         <div className="flex flex-col gap-2">
                             {results.events.map(ev => (
-                                <Link href={`/visitors/${ev.session_id}`} key={ev.id} className="glass-soft pressable px-4 py-3 flex items-center justify-between gap-4 group hover:!border-accent">
+                                <Link href={`/visitors/${ev.sessions?.visitor_uuid ?? ev.session_id}`} key={ev.id} className="glass-soft pressable px-4 py-3 flex items-center justify-between gap-4 group hover:!border-accent">
                                     <div className="flex items-center gap-4 min-w-0">
                                         <div className="text-fg font-mono text-xs truncate">{ev.path}</div>
                                         <div className="text-muted font-mono text-[10px] hidden md:block whitespace-nowrap">

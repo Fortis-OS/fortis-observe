@@ -38,3 +38,22 @@ Individual drill-down pages for every tracked visitor.
 - Displays full timeline of events, exposing exact backend latency for system health monitoring.
 - Shows scroll depth and session duration for every page view.
 - Provides a comprehensive breakdown of the user's network footprint.
+
+## 5. Data Model
+
+| Term | What it is | Where |
+|---|---|---|
+| **Person** | One browser, identified by the portfolio's `visitor_uuid` (localStorage) | `sessions.visitor_uuid` |
+| **Connection** | One person on one IP address | `sessions` row |
+| **Visit** | A person's run of page views with no gap longer than 30 minutes | `fortis_visits` view |
+| **Event** | One page view, with scroll depth and time on page | `events` row |
+
+Visits are derived from events in SQL, so ingestion (`ingest_telemetry`, `update_telemetry`) is unchanged.
+Counting happens in the database through `fortis_overview`, `fortis_top`, `fortis_daily` and
+`fortis_visitor_list`, all callable only with the service-role key. Every page takes `?range=today|7d|30d|all`
+(IST), and the Command Center compares the range with the one before it.
+
+Schema changes live in `supabase/migrations/` and are run by hand in the Supabase SQL editor, in file-name order:
+
+1. `20261120_security.sql`: no anon access to Fortis tables; `auth_attempts` for the TOTP limit.
+2. `20261121_visits_and_stats.sql`: the visits view, the stats functions and their indexes.

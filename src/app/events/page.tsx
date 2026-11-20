@@ -5,8 +5,7 @@ import { PageHeader } from "@/components/ui";
 
 export const dynamic = 'force-dynamic';
 
-export default async function SessionsPage() {
-    // We repurpose the "Sessions" sidebar link to show a raw Global Event Log
+export default async function EventsPage() {
     const { data: events } = await supabaseAdmin
         .from('events')
         .select(`
@@ -18,7 +17,7 @@ export default async function SessionsPage() {
 
     return (
         <div className="p-4 md:p-6 flex flex-col gap-6 h-full">
-            <PageHeader title="Global Event Log" subtitle="Chronological ledger of the most recent network requests." />
+            <PageHeader title="Events" subtitle="Every page view as it was recorded, newest 200." />
 
             <div className="glass flex-1 min-h-0 overflow-hidden flex flex-col">
                 <div className="flex-1 overflow-auto">
@@ -29,7 +28,7 @@ export default async function SessionsPage() {
                                 <th>Target path</th>
                                 <th>Source IP</th>
                                 <th>Type</th>
-                                <th className="text-right">Dossier</th>
+                                <th className="text-right">Person</th>
                             </tr>
                         </thead>
                         <tbody className="font-mono text-xs">
@@ -59,10 +58,10 @@ export default async function SessionsPage() {
                                     </td>
                                     <td className="text-right">
                                         <Link
-                                            href={`/visitors/${ev.session_id}`}
+                                            href={`/visitors/${ev.sessions?.visitor_uuid ?? ev.session_id}`}
                                             className="inline-flex items-center gap-1 font-sans text-[13px] text-muted hover:text-accent transition-colors"
                                         >
-                                            Target <ChevronRight className="w-3.5 h-3.5" />
+                                            Dossier <ChevronRight className="w-3.5 h-3.5" />
                                         </Link>
                                     </td>
                                 </tr>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { UAParser } from "ua-parser-js";
 import { getCorsHeaders } from "@/lib/cors";
+import { place } from "@/lib/place";
 import { bodyTooLarge, throttled, parsePageView } from "@/lib/telemetryGuard";
 
 export async function OPTIONS(req: NextRequest) {
@@ -35,7 +36,7 @@ export async function POST(req: NextRequest) {
         const { visitorId, path, referer, userAgent, latencyMs } = view;
 
         const vercelCountry = req.headers.get("x-vercel-ip-country") || "Unknown";
-        const vercelCity = req.headers.get("x-vercel-ip-city") || "Unknown";
+        const vercelCity = place(req.headers.get("x-vercel-ip-city")) || "Unknown"; // header is URL-encoded
         const vercelLat = parseFloat(req.headers.get("x-vercel-ip-latitude") || "0");
         const vercelLng = parseFloat(req.headers.get("x-vercel-ip-longitude") || "0");
         

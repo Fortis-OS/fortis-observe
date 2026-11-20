@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { statusColor, type SiteStatus } from "@/lib/siteStatus";
 import {
-    Activity, LayoutDashboard, Users, Clock, Search, Settings, FileText, BarChart2, MoreHorizontal, X, LogOut,
+    Activity, LayoutDashboard, Footprints, Users, Clock, Search, Settings, FileText, BarChart2, MoreHorizontal, X, LogOut,
     type LucideIcon,
 } from "lucide-react";
 
@@ -15,7 +15,8 @@ const links: NavLink[] = [
     { href: "/", label: "Command Center", icon: LayoutDashboard },
     { href: "/live", label: "Live Feed", icon: Activity },
     { href: "/visitors", label: "Visitors", icon: Users },
-    { href: "/sessions", label: "Sessions", icon: Clock },
+    { href: "/visits", label: "Visits", icon: Footprints },
+    { href: "/events", label: "Events", icon: Clock },
     { href: "/blogs", label: "Blog Intel", icon: FileText },
     { href: "/analytics", label: "Analytics", icon: BarChart2 },
     { href: "/search", label: "Search", icon: Search },

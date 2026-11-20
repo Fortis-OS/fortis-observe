@@ -1,0 +1,7 @@
+# Never upload local secrets or tooling with `vercel deploy`;
+# production gets its environment from the Vercel project settings.
+.env
+.env.*
+.claude
+node_modules
+.next

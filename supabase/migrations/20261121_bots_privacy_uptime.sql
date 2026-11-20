@@ -3,7 +3,14 @@
 
 create schema if not exists extensions;
 create extension if not exists pgcrypto with schema extensions;
-grant usage on schema extensions to service_role;   -- already true on Supabase; needed for hmac()
+-- service_role needs USAGE on extensions for hmac(). Supabase already grants it, and
+-- the extensions schema belongs to an admin role there, so a failed grant is fine.
+do $$
+begin
+    grant usage on schema extensions to service_role;
+exception when insufficient_privilege then
+    raise notice 'extensions schema: grant skipped (%), Supabase already grants it', sqlerrm;
+end $$;
 
 
 -- ─── 1. Re-flag older page views with today's bot rules ──────────────

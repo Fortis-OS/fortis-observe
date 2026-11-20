@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { statusColor, type SiteStatus } from "@/lib/siteStatus";
 import {
-    Activity, LayoutDashboard, Footprints, Users, Clock, Search, Settings, FileText, BarChart2, MoreHorizontal, X, LogOut,
+    Activity, LayoutDashboard, Footprints, HeartPulse, Users, Clock, Search, Settings, FileText, BarChart2, MoreHorizontal, X, LogOut,
     type LucideIcon,
 } from "lucide-react";
 
@@ -19,6 +19,7 @@ const links: NavLink[] = [
     { href: "/events", label: "Events", icon: Clock },
     { href: "/blogs", label: "Blog Intel", icon: FileText },
     { href: "/analytics", label: "Analytics", icon: BarChart2 },
+    { href: "/uptime", label: "Uptime", icon: HeartPulse },
     { href: "/search", label: "Search", icon: Search },
     { href: "/settings", label: "Settings", icon: Settings },
 ];
@@ -63,8 +64,9 @@ function SignOutButton() {
 
 function SystemStatus({ status }: { status: SiteStatus }) {
     return (
-        <div
-            className="flex items-center justify-between gap-2 px-3 text-xs"
+        <Link
+            href="/uptime"
+            className="flex items-center justify-between gap-2 px-3 text-xs rounded-full hover:bg-faint py-1"
             title={status.checkedAt ? `Last check ${new Date(status.checkedAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}` : "The uptime check has not run yet"}
         >
             <span className="caption !tracking-[1.5px]">Site</span>
@@ -72,7 +74,7 @@ function SystemStatus({ status }: { status: SiteStatus }) {
                 <span className={`dot ${status.state === "up" ? "live" : ""}`} />
                 <span className="text-fg font-mono text-[11px] truncate">{status.label}</span>
             </span>
-        </div>
+        </Link>
     );
 }
 

@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { UAParser } from "ua-parser-js";
 import { getCorsHeaders } from "@/lib/cors";
 import { place } from "@/lib/place";
+import { classify } from "@/lib/bots";
 import { bodyTooLarge, throttled, parsePageView } from "@/lib/telemetryGuard";
 
 export async function OPTIONS(req: NextRequest) {
@@ -33,7 +34,7 @@ export async function POST(req: NextRequest) {
         if (!view) {
             return NextResponse.json({ error: "Invalid payload" }, { status: 400, headers: corsHeaders });
         }
-        const { visitorId, path, referer, userAgent, latencyMs } = view;
+        const { visitorId, path, referer, userAgent, latencyMs, webdriver } = view;
 
         const vercelCountry = req.headers.get("x-vercel-ip-country") || "Unknown";
         const vercelCity = place(req.headers.get("x-vercel-ip-city")) || "Unknown"; // header is URL-encoded
@@ -49,10 +50,6 @@ export async function POST(req: NextRequest) {
                 let city = vercelCity;
                 let latitude = vercelLat;
                 let longitude = vercelLng;
-
-                // Simple Bot Detection based on User-Agent
-                const uaLower = rawUA.toLowerCase();
-                const isBot = uaLower.includes("bot") || uaLower.includes("crawler") || uaLower.includes("spider");
 
                 // Advanced device/os/browser parsing using UAParser
                 const parser = new UAParser(rawUA);
@@ -91,23 +88,8 @@ export async function POST(req: NextRequest) {
                     }
                 }
                 
-                // Data Center IP Checking
-                const ispLower = isp.toLowerCase();
-                const isDataCenter = 
-                    ispLower.includes("amazon") || 
-                    ispLower.includes("google") || 
-                    ispLower.includes("microsoft") || 
-                    ispLower.includes("azure") || 
-                    ispLower.includes("digitalocean") || 
-                    ispLower.includes("ovh") || 
-                    ispLower.includes("hetzner") || 
-                    ispLower.includes("linode") || 
-                    ispLower.includes("alibaba") || 
-                    ispLower.includes("tencent") || 
-                    ispLower.includes("choopa") || 
-                    ispLower.includes("contabo");
-
-                const finalIsBot = isBot || isDataCenter;
+                // Bot rules: user agent, headless browsers, navigator.webdriver, datacenter networks
+                const finalIsBot = classify({ userAgent: rawUA, browser, isp, webdriver }).bot;
 
                 const { error } = await supabaseAdmin.rpc("ingest_telemetry", {
                     p_visitor_uuid: visitorId,

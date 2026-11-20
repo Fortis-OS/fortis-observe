@@ -57,3 +57,6 @@ Schema changes live in `supabase/migrations/` and are run by hand in the Supabas
 
 1. `20261120_security.sql`: no anon access to Fortis tables; `auth_attempts` for the TOTP limit.
 2. `20261121_visits_and_stats.sql`: the visits view, the stats functions and their indexes.
+3. `20261121_bots_privacy_uptime.sql`: re-flags older bot traffic, anonymises IPs not seen for 30 days
+   (network kept, host replaced by a salted hash), deletes login attempts after 30 days and uptime checks
+   after 180, and counts `utm_source:` referrers by source. The uptime cron runs `fortis_retention()` on every check.

@@ -41,5 +41,11 @@ export async function GET(request: Request) {
         return NextResponse.json({ error: "DB Insert Failed" }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true, latencyMs, statusCode });
+    // Retention (supabase/migrations/20261121_bots_privacy_uptime.sql): anonymise
+    // IPs not seen for 30 days, drop old login attempts and uptime checks.
+    // Cheap and idempotent, so it simply runs with every check.
+    const { data: retention, error: retentionError } = await supabaseAdmin.rpc("fortis_retention", { p_days: 30 });
+    if (retentionError) console.error("Retention failed:", retentionError.message);
+
+    return NextResponse.json({ success: true, latencyMs, statusCode, retention: retention ?? null });
 }

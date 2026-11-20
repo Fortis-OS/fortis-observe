@@ -36,7 +36,7 @@ const str = (v: unknown, max: number) => (typeof v === "string" && v.length <= m
 const int = (v: unknown, min: number, max: number) =>
     typeof v === "number" && Number.isFinite(v) ? Math.min(max, Math.max(min, Math.round(v))) : undefined;
 
-export type PageView = { visitorId: string; path: string; referer: string; userAgent?: string; latencyMs?: number };
+export type PageView = { visitorId: string; path: string; referer: string; userAgent?: string; latencyMs?: number; webdriver?: boolean };
 export type PageUpdate = { visitorId: string; path: string; scrollDepth?: number; durationMs?: number };
 
 function base(body: Record<string, unknown>) {
@@ -57,6 +57,7 @@ export function parsePageView(body: unknown): PageView | null {
         referer: str(b.referer, 1024) ?? "",
         userAgent: str(b.userAgent, 512),
         latencyMs: int(b.latencyMs, 0, 10 * 60 * 1000),
+        webdriver: b.webdriver === true,
     };
 }
 

@@ -3,9 +3,13 @@ import { supabaseAdmin } from "@/lib/supabase";
 
 // This endpoint is triggered by Vercel Cron
 export async function GET(request: Request) {
-    // Vercel Cron sends a specific authorization header. You can verify it for security.
-    const authHeader = request.headers.get("authorization");
-    if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    // Vercel Cron sends "Authorization: Bearer $CRON_SECRET". The route is outside
+    // the login proxy, so without a secret configured it refuses to run at all.
+    const secret = process.env.CRON_SECRET;
+    if (!secret) {
+        return new NextResponse("CRON_SECRET is not set", { status: 503 });
+    }
+    if (request.headers.get("authorization") !== `Bearer ${secret}`) {
         return new NextResponse("Unauthorized", { status: 401 });
     }
 

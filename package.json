@@ -19,9 +19,7 @@
     "otplib": "^13.4.1",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "react-globe.gl": "^2.38.0",
     "recharts": "^3.9.0",
-    "three": "^0.185.0",
     "ua-parser-js": "^2.0.10"
   },
   "devDependencies": {
@@ -29,7 +27,6 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@types/three": "^0.185.4",
     "@types/ua-parser-js": "^0.7.39",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",

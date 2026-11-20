@@ -1,28 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { UAParser } from "ua-parser-js";
-
-// Whitelist of allowed origins for CORS
-const ALLOWED_ORIGINS = [
-    "https://ganeshangadi.online",
-    "http://localhost:3000",
-    "http://localhost:3001"
-];
-
-function getCorsHeaders(req: NextRequest) {
-    const origin = req.headers.get("origin") || "";
-    return {
-        "Access-Control-Allow-Origin": ALLOWED_ORIGINS.includes(origin) ? origin : "https://ganeshangadi.online",
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type",
-    };
-}
+import { getCorsHeaders } from "@/lib/cors";
 
 export async function OPTIONS(req: NextRequest) {
     return NextResponse.json({}, { headers: getCorsHeaders(req) });
 }
 
 export async function POST(req: NextRequest) {
+    // Backend latency: from the moment the request arrives until the row is
+    // handed to the database (body parsing, UA parsing, the ipinfo lookup).
+    const receivedAt = performance.now();
     const corsHeaders = getCorsHeaders(req);
 
     try {
@@ -113,9 +101,6 @@ export async function POST(req: NextRequest) {
 
                 const finalIsBot = isBot || isDataCenter;
 
-                // Measure database-only latency (excl. external HTTP calls)
-                const dbStartTime = performance.now();
-                
                 const { error } = await supabaseAdmin.rpc("ingest_telemetry", {
                     p_visitor_uuid: visitorId,
                     p_ip_address: ipAddress,
@@ -131,7 +116,7 @@ export async function POST(req: NextRequest) {
                     p_referer: referer || "",
                     p_is_bot: finalIsBot,
                     p_latency_ms: latencyMs || null,
-                    p_backend_latency_ms: Math.round(performance.now() - dbStartTime)
+                    p_backend_latency_ms: Math.round(performance.now() - receivedAt)
                 });
 
                 if (error) {

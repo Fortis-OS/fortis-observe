@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase";
+import { fetchAll } from "@/lib/fetchAll";
 import { AnalyticsCharts } from "@/components/AnalyticsCharts";
 import { PageHeader } from "@/components/ui";
 
@@ -6,7 +7,8 @@ export const dynamic = 'force-dynamic';
 
 export default async function AnalyticsPage() {
     // Fetch all sessions (or limit to a recent window) to aggregate stats
-    const { data: sessions } = await supabaseAdmin.from('sessions').select('browser, os, country, total_visits');
+    const sessions = await fetchAll<{ browser: string; os: string; country: string; total_visits: number }>((from, to) =>
+        supabaseAdmin.from('sessions').select('browser, os, country, total_visits').order('id').range(from, to));
 
     const rawBrowsers: Record<string, number> = {};
     const rawOs: Record<string, number> = {};
@@ -15,7 +17,7 @@ export default async function AnalyticsPage() {
     let newVisitors = 0;
     let returningVisitors = 0;
 
-    sessions?.forEach(s => {
+    sessions.forEach(s => {
         rawBrowsers[s.browser] = (rawBrowsers[s.browser] || 0) + 1;
         rawOs[s.os] = (rawOs[s.os] || 0) + 1;
         rawCountries[s.country] = (rawCountries[s.country] || 0) + 1;
@@ -44,12 +46,13 @@ export default async function AnalyticsPage() {
         .slice(0, 8);
 
     // Fetch human events to aggregate pages and referrers
-    const { data: events } = await supabaseAdmin.from('events').select('path, referer, is_bot').eq('is_bot', false);
+    const events = await fetchAll<{ path: string; referer: string | null; is_bot: boolean }>((from, to) =>
+        supabaseAdmin.from('events').select('path, referer, is_bot').eq('is_bot', false).order('id').range(from, to));
 
     const rawPaths: Record<string, number> = {};
     const rawReferrers: Record<string, number> = {};
 
-    events?.forEach(e => {
+    events.forEach(e => {
         rawPaths[e.path] = (rawPaths[e.path] || 0) + 1;
         
         let ref = e.referer || "Direct";

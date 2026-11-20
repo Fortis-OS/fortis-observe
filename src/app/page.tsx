@@ -1,7 +1,9 @@
-import { Activity, Globe2, ShieldAlert, Users, Zap, UserCheck, MapPin } from "lucide-react";
-import { GlobeWrapper } from "@/components/GlobeWrapper";
+import { Activity, ShieldAlert, Users, Zap, UserCheck, MapPin } from "lucide-react";
 import { LiveFeed } from "@/components/LiveFeed";
 import { supabaseAdmin } from "@/lib/supabase";
+import { fetchAll } from "@/lib/fetchAll";
+import { getSiteStatus } from "@/lib/status";
+import { statusColor } from "@/lib/siteStatus";
 import { PageHeader, Chip, Caption, Metric, BarList } from "@/components/ui";
 import { Chronos } from "@/components/command/Chronos";
 import { HourStrip, type HourBucket } from "@/components/command/HourStrip";
@@ -24,23 +26,22 @@ async function loadDashboard() {
     { count: sessionCount },
     { count: eventCount },
     { count: humanCount },
-    { data: sessionRows },
-    { data: dayEvents },
-    { data: globeSessions },
+    sessionRows,
+    dayEvents,
   ] = await Promise.all([
     supabaseAdmin.from('sessions').select('*', { count: 'exact', head: true }),
     supabaseAdmin.from('events').select('*', { count: 'exact', head: true }),
     supabaseAdmin.from('events').select('*', { count: 'exact', head: true }).eq('is_bot', false),
-    supabaseAdmin.from('sessions').select('isp, country'),
-    supabaseAdmin.from('events').select('timestamp, is_bot').gte('timestamp', new Date(dayStart).toISOString()),
-    // Active countries/cities to draw arcs on the globe
-    supabaseAdmin.from('sessions').select('country, city, ip_address, latitude, longitude').limit(100),
+    fetchAll<{ isp: string | null; country: string | null }>((from, to) =>
+      supabaseAdmin.from('sessions').select('isp, country').order('id').range(from, to)),
+    fetchAll<{ timestamp: string; is_bot: boolean }>((from, to) =>
+      supabaseAdmin.from('events').select('timestamp, is_bot').gte('timestamp', new Date(dayStart).toISOString()).order('id').range(from, to)),
   ]);
 
   // Top sources (ISP) and top country
   const ispCounts: Record<string, number> = {};
   const countryCounts: Record<string, number> = {};
-  sessionRows?.forEach(row => {
+  sessionRows.forEach(row => {
     const isp = row.isp && row.isp !== 'Unknown' ? row.isp : 'Other';
     ispCounts[isp] = (ispCounts[isp] || 0) + 1;
     if (row.country && row.country !== 'Unknown') {
@@ -58,7 +59,7 @@ async function loadDashboard() {
 
   // Last 24 hours, one bucket per hour (oldest first, current hour last)
   const buckets: HourBucket[] = Array.from({ length: 24 }, (_, i) => ({ hour: istHour(dayStart + i * HOUR), human: 0, bot: 0 }));
-  dayEvents?.forEach(ev => {
+  dayEvents.forEach(ev => {
     const i = Math.floor((new Date(ev.timestamp).getTime() - dayStart) / HOUR);
     if (i >= 0 && i < 24) buckets[i][ev.is_bot ? 'bot' : 'human'] += 1;
   });
@@ -72,15 +73,16 @@ async function loadDashboard() {
 
   return {
     sessions, events, humans, humanShare, topSources, topCountry, topCountryCount, located,
-    buckets, dayHuman, dayBot, globeSessions: globeSessions || [],
+    buckets, dayHuman, dayBot,
   };
 }
 
 export default async function CommandCenter() {
   const {
     sessions, events, humans, humanShare, topSources, topCountry, topCountryCount, located,
-    buckets, dayHuman, dayBot, globeSessions,
+    buckets, dayHuman, dayBot,
   } = await loadDashboard();
+  const site = await getSiteStatus();
 
   return (
     <div className="p-4 md:p-6 flex flex-col gap-6 min-h-full">
@@ -90,7 +92,7 @@ export default async function CommandCenter() {
         right={
           <>
             <Chip on><span className="dot live" /> Live</Chip>
-            <Chip><ShieldAlert className="w-3.5 h-3.5 text-ok" /> Status: optimal</Chip>
+            <Chip><ShieldAlert className={`w-3.5 h-3.5 ${statusColor(site.state)}`} /> Site: <span className="font-mono text-fg">{site.label}</span></Chip>
           </>
         }
       />
@@ -133,29 +135,19 @@ export default async function CommandCenter() {
           <HourStrip buckets={buckets} />
         </section>
 
-        {/* Row 2: globe + sources and feed */}
-        <section className="glass lg:col-span-8 relative overflow-hidden min-h-[380px] lg:min-h-[520px] flex items-center justify-center">
-          <div className="absolute top-[18px] left-[18px] z-10 flex items-center gap-2">
-            <Globe2 className="w-3.5 h-3.5 text-muted" />
-            <Caption>Fortis radar</Caption>
+        {/* Row 2: live feed + top sources */}
+        <section className="glass p-[18px] lg:col-span-8 flex flex-col gap-4 min-h-[320px] lg:h-[420px] overflow-hidden">
+          <div className="flex items-center gap-2">
+            <Activity className="w-3.5 h-3.5 text-muted" />
+            <Caption>Live event feed</Caption>
           </div>
-          <GlobeWrapper activeSessions={globeSessions} />
+          <LiveFeed />
         </section>
 
-        <div className="lg:col-span-4 flex flex-col gap-4 md:gap-5 min-h-0">
-          <section className="glass p-[18px] flex flex-col gap-4">
-            <Caption>Top sources</Caption>
-            <BarList items={topSources} empty="No sources detected." />
-          </section>
-
-          <section className="glass p-[18px] flex-1 flex flex-col gap-4 min-h-[300px] lg:max-h-[420px] overflow-hidden">
-            <div className="flex items-center gap-2">
-              <Activity className="w-3.5 h-3.5 text-muted" />
-              <Caption>Live event feed</Caption>
-            </div>
-            <LiveFeed />
-          </section>
-        </div>
+        <section className="glass p-[18px] lg:col-span-4 flex flex-col gap-4">
+          <Caption>Top sources</Caption>
+          <BarList items={topSources} empty="No sources detected." />
+        </section>
 
       </div>
     </div>

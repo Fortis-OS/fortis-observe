@@ -1,17 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
+import { getCorsHeaders } from "@/lib/cors";
 
-const corsHeaders = {
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
-};
-
-export async function OPTIONS() {
-    return NextResponse.json({}, { headers: corsHeaders });
+export async function OPTIONS(req: NextRequest) {
+    return NextResponse.json({}, { headers: getCorsHeaders(req) });
 }
 
 export async function POST(req: NextRequest) {
+    const corsHeaders = getCorsHeaders(req);
     try {
         const body = await req.json();
         const { visitorId, path, scrollDepth, durationMs } = body;

@@ -33,11 +33,6 @@ The portfolio utilizes modern browser APIs to track user engagement without comp
 
 ## 4. Visualizations
 
-### The CyberGlobe (`react-globe.gl`)
-A dynamic 3D WebGL rendering engine.
-- Plots incoming traffic on a neon wireframe globe based on precise latitude/longitude.
-- Calculates and renders cubic bezier arcs from the visitor's coordinates to the hosting server's physical coordinates.
-
 ### Target Dossiers
 Individual drill-down pages for every tracked visitor.
 - Displays full timeline of events, exposing exact backend latency for system health monitoring.

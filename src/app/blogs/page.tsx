@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase";
+import { fetchAll } from "@/lib/fetchAll";
 import { Eye } from "lucide-react";
 import Link from "next/link";
 import { PageHeader } from "@/components/ui";
@@ -7,14 +8,17 @@ export const dynamic = 'force-dynamic';
 
 export default async function BlogsPage() {
     // Fetch all blog events
-    const { data: blogEvents } = await supabaseAdmin
-        .from('events')
-        .select('path, is_bot, duration_ms, scroll_depth_pct')
-        .like('path', '/blog/%');
+    const blogEvents = await fetchAll<{ path: string; is_bot: boolean; duration_ms: number | null; scroll_depth_pct: number | null }>((from, to) =>
+        supabaseAdmin
+            .from('events')
+            .select('path, is_bot, duration_ms, scroll_depth_pct')
+            .like('path', '/blog/%')
+            .order('id')
+            .range(from, to));
 
     const counts: Record<string, { total: number, bots: number, totalDuration: number, humanCount: number, totalScroll: number }> = {};
     
-    blogEvents?.forEach(e => {
+    blogEvents.forEach(e => {
         if (!counts[e.path]) counts[e.path] = { total: 0, bots: 0, totalDuration: 0, humanCount: 0, totalScroll: 0 };
         counts[e.path].total += 1;
         

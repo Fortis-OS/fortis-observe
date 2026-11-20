@@ -3,6 +3,7 @@ import { JetBrains_Mono } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 import { Sidebar } from "@/components/Sidebar";
+import { getSiteStatus } from "@/lib/status";
 
 export const dynamic = 'force-dynamic';
 export const fetchCache = 'force-no-store';
@@ -31,16 +32,17 @@ export const viewport: Viewport = {
   colorScheme: "dark",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const status = await getSiteStatus();
   return (
     <html lang="en" className={`dark ${rufscript.variable} ${jetbrains.variable}`}>
       <body suppressHydrationWarning className="font-sans text-fg flex min-h-screen overflow-hidden">
         <div className="frost-backdrop" aria-hidden />
-        <Sidebar />
+        <Sidebar status={status} />
         <main className="flex-1 h-screen overflow-y-auto relative pb-24 md:pb-0">
           {children}
         </main>

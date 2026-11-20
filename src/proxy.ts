@@ -9,6 +9,7 @@ export async function proxy(request: NextRequest) {
         pathname.startsWith('/lockdown') || 
         pathname.startsWith('/api/auth') || 
         pathname.startsWith('/api/telemetry') || // Allow external telemetry
+        pathname.startsWith('/api/cron') ||      // Vercel Cron; the route checks CRON_SECRET itself
         pathname.startsWith('/_next') || 
         pathname.startsWith('/favicon.ico')
     ) {

@@ -3,8 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { statusColor, type SiteStatus } from "@/lib/siteStatus";
 import {
-    Activity, Globe, LayoutDashboard, Users, Clock, Search, Settings, FileText, BarChart2, MoreHorizontal, X,
+    Activity, LayoutDashboard, Users, Clock, Search, Settings, FileText, BarChart2, MoreHorizontal, X,
     type LucideIcon,
 } from "lucide-react";
 
@@ -13,7 +14,6 @@ type NavLink = { href: string; label: string; icon: LucideIcon };
 const links: NavLink[] = [
     { href: "/", label: "Command Center", icon: LayoutDashboard },
     { href: "/live", label: "Live Feed", icon: Activity },
-    { href: "/map", label: "Global Map", icon: Globe },
     { href: "/visitors", label: "Visitors", icon: Users },
     { href: "/sessions", label: "Sessions", icon: Clock },
     { href: "/blogs", label: "Blog Intel", icon: FileText },
@@ -43,19 +43,22 @@ function Brand() {
     );
 }
 
-function SystemStatus() {
+function SystemStatus({ status }: { status: SiteStatus }) {
     return (
-        <div className="flex items-center justify-between px-3 text-xs">
-            <span className="caption !tracking-[1.5px]">System</span>
-            <span className="flex items-center gap-1.5 text-ok">
-                <span className="dot live" />
-                <span className="text-fg">Healthy</span>
+        <div
+            className="flex items-center justify-between gap-2 px-3 text-xs"
+            title={status.checkedAt ? `Last check ${new Date(status.checkedAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}` : "The uptime check has not run yet"}
+        >
+            <span className="caption !tracking-[1.5px]">Site</span>
+            <span className={`flex items-center gap-1.5 min-w-0 ${statusColor(status.state)}`}>
+                <span className={`dot ${status.state === "up" ? "live" : ""}`} />
+                <span className="text-fg font-mono text-[11px] truncate">{status.label}</span>
             </span>
         </div>
     );
 }
 
-export function Sidebar() {
+export function Sidebar({ status }: { status: SiteStatus }) {
     const pathname = usePathname();
     // The "More" sheet remembers the page it was opened on, so it closes by itself on navigation.
     const [moreOpenOn, setMoreOpenOn] = useState<string | null>(null);
@@ -97,7 +100,7 @@ export function Sidebar() {
                     </nav>
 
                     <div className="pt-4 mx-3 border-t border-faint">
-                        <SystemStatus />
+                        <SystemStatus status={status} />
                     </div>
                 </div>
             </aside>
@@ -136,7 +139,7 @@ export function Sidebar() {
                             })}
                         </div>
                         <div className="mt-3 pt-3 border-t border-faint">
-                            <SystemStatus />
+                            <SystemStatus status={status} />
                         </div>
                     </div>
                 </div>

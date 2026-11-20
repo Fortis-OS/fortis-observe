@@ -11,7 +11,7 @@
 ### 🛠️ CORE ARCHITECTURE
 - **Frontend Engine**: Next.js (App Router + Turbopack)
 - **Styling**: TailwindCSS + Lucide React + Glassmorphism UI
-- **Visualization**: `react-globe.gl` (WebGL Data Visualization)
+- **Visualization**: `recharts` and plain CSS bars, in the Frost / Obsidian Glass style
 - **Database**: Supabase (PostgreSQL + PlpgSQL RPCs)
 - **Authentication**: Multi-factor authentication using TOTP and WebAuthn
 - **Geolocation**: Vercel Edge Headers & `ipinfo.io` Network Layer Routing
@@ -51,24 +51,19 @@ Access to the Command Center is strictly protected by a custom Next.js Edge Midd
 
 ## 📡 TELEMETRY & FEATURES
 
-### 1. The Global Radar (WebGL)
-A dynamic, real-time 3D rendering of the globe utilizing `react-globe.gl`. 
-- **Hexagonal Polygons**: Renders intricate, dark-mode country borders via dynamically fetched GeoJSON data.
-- **Connection Arcs**: Renders animated connection arcs between visitor locations and the hosting region, visualizing traffic flows toward the hosted application endpoint.
-
-### 2. Live Intelligence Feed
+### 1. Live Intelligence Feed
 A simulated terminal output tracking HTTP requests hitting the primary portfolio.
 - Extracts client IP information from trusted proxy headers (X-Forwarded-For when available).
 - Displays connection statuses, exact Device/OS/Browser taxonomy, and HTTP endpoints accessed in an auto-scrolling terminal window.
 - Captures UTM parameters (e.g., `?utm_source=`) to bypass privacy-stripping webviews (like LinkedIn/Instagram mobile apps) and accurately track referring domains.
 
-### 3. Target Dossier (Visitor Analytics)
+### 2. Target Dossier (Visitor Analytics)
 A searchable, paginated table of all unique network footprints tracking:
 - Precise Browser and OS versions (e.g., Chrome 124, iOS 17) and hardware models (Tablet vs Mobile).
 - First Seen and Last Seen timestamps.
 - Total Request Count and precise Session Duration timers.
 - Scroll Depth calculations to measure content engagement.
-- Backend Latency metrics appended to every page view for system health monitoring.
+- Backend latency (request arrival to database hand-off, including the ipinfo lookup) on every page view.
 - Integrates ASN details to silently flag datacenter requests (e.g., AWS, Google Cloud) as bots, keeping human metrics pristine.
 - Flags sessions for "Impossible Travel" anomalies if a user jumps countries in less than 12 hours.
 
@@ -105,6 +100,9 @@ IPINFO_TOKEN=[REDACTED]
 # Cryptography
 JWT_SECRET=[GENERATED_BASE64_KEY]
 ADMIN_TOTP_SECRET=[GENERATED_BASE32_KEY]
+
+# Uptime cron (vercel.json runs /api/cron/ping daily; the route refuses to run without it)
+CRON_SECRET=[RANDOM_STRING]
 ```
 
 ### Ignition Sequence

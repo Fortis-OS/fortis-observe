@@ -3,6 +3,7 @@ import Link from "next/link";
 import { GlobeWrapper } from "@/components/GlobeWrapper";
 import { LiveFeed } from "@/components/LiveFeed";
 import { supabaseAdmin } from "@/lib/supabase";
+import { PageHeader, Chip } from "@/components/ui";
 
 export const dynamic = 'force-dynamic';
 
@@ -28,23 +29,16 @@ export default async function CommandCenter() {
   return (
     <div className="p-4 md:p-6 space-y-6 min-h-full flex flex-col pb-24 md:pb-10">
       {/* Header bar */}
-      <header className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold tracking-wider text-slate-100 flex items-center gap-3">
-          COMMAND CENTER
-          <span className="text-xs font-mono bg-cyan-900/50 text-cyan-400 px-2 py-1 rounded border border-cyan-800">
-            LIVE
-          </span>
-        </h1>
-        <div className="flex flex-wrap gap-2 md:gap-4">
-            <div className="glass-panel px-4 py-2 flex items-center gap-2">
-                <ShieldAlert className="w-4 h-4 text-emerald-400" />
-                <span className="text-sm font-medium">Status: OPTIMAL</span>
-            </div>
-            <div className="glass-panel px-4 py-2 flex items-center gap-2 text-slate-300 hidden sm:flex">
-                <span className="text-sm font-mono">GLOBAL OPERATIONS</span>
-            </div>
-        </div>
-      </header>
+      <PageHeader
+        title="Command Center"
+        eyebrow={new Date().toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+        right={
+          <>
+            <Chip on><span className="dot live" /> Live</Chip>
+            <Chip><ShieldAlert className="w-3.5 h-3.5 text-ok" /> Status: optimal</Chip>
+          </>
+        }
+      />
 
       {/* Main Grid */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 flex-1 min-h-0 pb-10">

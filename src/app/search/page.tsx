@@ -4,6 +4,7 @@ import { useState } from "react";
 import { performGlobalSearch } from "./actions";
 import { Search as SearchIcon, Terminal, Activity, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { PageHeader } from "@/components/ui";
 
 export default function SearchPage() {
     const [query, setQuery] = useState("");
@@ -21,13 +22,7 @@ export default function SearchPage() {
 
     return (
         <div className="p-6 space-y-6 h-full flex flex-col max-w-5xl mx-auto w-full">
-            <header>
-                <h1 className="text-2xl font-bold tracking-wider text-slate-100 flex items-center gap-3">
-                    <SearchIcon className="w-6 h-6 text-cyan-400" />
-                    GLOBAL SEARCH
-                </h1>
-                <p className="text-slate-400 mt-2 text-sm">Query telemetry data by IP Address, Location, Target Path, or UUID.</p>
-            </header>
+            <PageHeader title="Global Search" subtitle="Query telemetry data by IP Address, Location, Target Path, or UUID." />
 
             <form onSubmit={handleSearch} className="relative">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">

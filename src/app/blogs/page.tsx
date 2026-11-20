@@ -1,6 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabase";
-import { FileText, Eye } from "lucide-react";
+import { Eye } from "lucide-react";
 import Link from "next/link";
+import { PageHeader } from "@/components/ui";
 
 export const dynamic = 'force-dynamic';
 
@@ -41,13 +42,7 @@ export default async function BlogsPage() {
 
     return (
         <div className="p-6 space-y-6 min-h-full flex flex-col pb-10">
-            <header>
-                <h1 className="text-2xl font-bold tracking-wider text-slate-100 flex items-center gap-3">
-                    <FileText className="w-6 h-6 text-cyan-400" />
-                    BLOG INTELLIGENCE
-                </h1>
-                <p className="text-slate-400 mt-2 text-sm">Traffic analysis specifically filtered for your published articles.</p>
-            </header>
+            <PageHeader title="Blog Intelligence" subtitle="Traffic analysis specifically filtered for your published articles." />
 
             <div className="glass-panel overflow-hidden border border-slate-800">
                 <table className="w-full text-left text-sm text-slate-300">

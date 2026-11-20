@@ -1,6 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabase";
 import { AnalyticsCharts } from "@/components/AnalyticsCharts";
-import { BarChart2 } from "lucide-react";
+import { PageHeader } from "@/components/ui";
 
 export const dynamic = 'force-dynamic';
 
@@ -74,13 +74,7 @@ export default async function AnalyticsPage() {
 
     return (
         <div className="p-6 space-y-6 h-full flex flex-col overflow-y-auto">
-            <header>
-                <h1 className="text-2xl font-bold tracking-wider text-slate-100 flex items-center gap-3">
-                    <BarChart2 className="w-6 h-6 text-cyan-400" />
-                    ANALYTICS DASHBOARD
-                </h1>
-                <p className="text-slate-400 mt-2 text-sm">Aggregated metrics and intelligence from all recorded sessions.</p>
-            </header>
+            <PageHeader title="Analytics Dashboard" subtitle="Aggregated metrics and intelligence from all recorded sessions." />
 
             <AnalyticsCharts 
                 browsers={browsers} 

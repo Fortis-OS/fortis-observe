@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/lib/supabase";
-import { ArrowLeft, Clock, Globe2, Laptop, Network, ShieldAlert, Terminal, Activity, FileText } from "lucide-react";
+import { ArrowLeft, Clock, Globe2, Laptop, Network, ShieldAlert, Activity, FileText } from "lucide-react";
+import { PageHeader } from "@/components/ui";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -25,23 +26,22 @@ export default async function VisitorTimeline({ params }: { params: { id: string
 
     return (
         <div className="p-6 space-y-6 h-full flex flex-col max-w-7xl mx-auto w-full">
-            <header className="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4">
-                <div>
-                    <Link href="/visitors" className="text-cyan-500 hover:text-cyan-400 flex items-center gap-2 text-sm font-mono mb-4 transition-colors">
-                        <ArrowLeft className="w-4 h-4" />
-                        BACK TO SESSIONS
-                    </Link>
-                    <h1 className="text-2xl font-bold tracking-wider text-slate-100 flex items-center gap-3">
-                        <Terminal className="w-6 h-6 text-cyan-400" />
-                        TARGET DOSSIER
-                    </h1>
-                    <p className="text-slate-400 mt-2 font-mono text-sm">UUID: {session.visitor_uuid}</p>
-                </div>
-                <div className="text-left xl:text-right font-mono text-xs text-slate-500">
-                    <div>FIRST SEEN: {new Date(session.first_seen).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'medium' })}</div>
-                    <div>LAST SEEN: {new Date(session.last_seen).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'medium' })}</div>
-                </div>
-            </header>
+            <div>
+                <Link href="/visitors" className="pressable inline-flex items-center gap-2 mb-4 chip hover:bg-faint hover:text-fg">
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    Back to visitors
+                </Link>
+                <PageHeader
+                    title="Target Dossier"
+                    subtitle={<span className="font-mono text-xs break-all">UUID {session.visitor_uuid}</span>}
+                    right={
+                        <div className="text-left md:text-right font-mono text-xs text-muted space-y-1">
+                            <div><span className="caption !tracking-[1.5px] mr-2">First seen</span>{new Date(session.first_seen).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'medium' })}</div>
+                            <div><span className="caption !tracking-[1.5px] mr-2">Last seen</span>{new Date(session.last_seen).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'medium' })}</div>
+                        </div>
+                    }
+                />
+            </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
                 {/* Session Details Card */}

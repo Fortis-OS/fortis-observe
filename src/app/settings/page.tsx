@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { startRegistration } from '@simplewebauthn/browser';
 import { Fingerprint, ShieldCheck } from "lucide-react";
+import { PageHeader } from "@/components/ui";
 
 export default function SettingsPage() {
     const [status, setStatus] = useState("");
@@ -48,9 +49,9 @@ export default function SettingsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-slate-950 text-slate-200 font-mono p-8">
-            <h1 className="text-3xl font-bold text-cyan-400 mb-8 border-b border-slate-800 pb-4">System Settings</h1>
-            
+        <div className="p-4 md:p-6 space-y-6">
+            <PageHeader title="System Settings" subtitle="Security keys and access to this dashboard." />
+
             <div className="max-w-xl glass-panel p-6 bg-slate-900/50 border border-slate-800 rounded-lg space-y-6">
                 <div>
                     <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">

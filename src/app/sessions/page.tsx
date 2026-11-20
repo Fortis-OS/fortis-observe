@@ -1,6 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabase";
-import { Clock, ShieldAlert, FileText, Link as LinkIcon } from "lucide-react";
+import { ShieldAlert, FileText, Link as LinkIcon } from "lucide-react";
 import Link from "next/link";
+import { PageHeader } from "@/components/ui";
 
 export const dynamic = 'force-dynamic';
 
@@ -17,13 +18,7 @@ export default async function SessionsPage() {
 
     return (
         <div className="p-6 space-y-6 h-full flex flex-col">
-            <header>
-                <h1 className="text-2xl font-bold tracking-wider text-slate-100 flex items-center gap-3">
-                    <Clock className="w-6 h-6 text-cyan-400" />
-                    GLOBAL EVENT LOG
-                </h1>
-                <p className="text-slate-400 mt-2 text-sm">Chronological ledger of the most recent network requests.</p>
-            </header>
+            <PageHeader title="Global Event Log" subtitle="Chronological ledger of the most recent network requests." />
 
             <div className="glass-panel flex-1 overflow-hidden flex flex-col border border-slate-800">
                 <div className="flex-1 overflow-auto p-0">

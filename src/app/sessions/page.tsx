@@ -1,5 +1,5 @@
 import { supabaseAdmin } from "@/lib/supabase";
-import { ShieldAlert, FileText, Link as LinkIcon } from "lucide-react";
+import { ShieldAlert, User, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { PageHeader } from "@/components/ui";
 
@@ -17,58 +17,59 @@ export default async function SessionsPage() {
         .limit(200);
 
     return (
-        <div className="p-6 space-y-6 h-full flex flex-col">
+        <div className="p-4 md:p-6 flex flex-col gap-6 h-full">
             <PageHeader title="Global Event Log" subtitle="Chronological ledger of the most recent network requests." />
 
-            <div className="glass-panel flex-1 overflow-hidden flex flex-col border border-slate-800">
-                <div className="flex-1 overflow-auto p-0">
-                    <table className="w-full text-left text-sm text-slate-300">
-                        <thead className="text-xs uppercase bg-slate-900/80 text-slate-400 sticky top-0">
+            <div className="glass flex-1 min-h-0 overflow-hidden flex flex-col">
+                <div className="flex-1 overflow-auto">
+                    <table className="ftable">
+                        <thead>
                             <tr>
-                                <th className="px-6 py-4 font-bold tracking-widest">Time</th>
-                                <th className="px-6 py-4 font-bold tracking-widest">Target Path</th>
-                                <th className="px-6 py-4 font-bold tracking-widest">Source IP</th>
-                                <th className="px-6 py-4 font-bold tracking-widest">Type</th>
-                                <th className="px-6 py-4 font-bold tracking-widest text-right">Dossier</th>
+                                <th>Time</th>
+                                <th>Target path</th>
+                                <th>Source IP</th>
+                                <th>Type</th>
+                                <th className="text-right">Dossier</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-800/50 font-mono text-xs">
+                        <tbody className="font-mono text-xs">
                             {events?.map((ev) => (
-                                <tr key={ev.id} className="hover:bg-slate-800/30 transition-colors">
-                                    <td className="px-6 py-4 text-slate-500 whitespace-nowrap">
+                                <tr key={ev.id}>
+                                    <td className="text-muted whitespace-nowrap">
                                         {new Date(ev.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'medium' })}
                                     </td>
-                                    <td className="px-6 py-4">
-                                        <div className="text-emerald-400 truncate max-w-[300px]" title={ev.path}>{ev.path}</div>
+                                    <td>
+                                        <div className="text-fg truncate max-w-[300px]" title={ev.path}>{ev.path}</div>
                                         {ev.referer && ev.referer !== 'null' && (
-                                            <div className="text-[10px] text-slate-500 truncate max-w-[300px] mt-1">Ref: {ev.referer}</div>
+                                            <div className="text-[10px] text-muted truncate max-w-[300px] mt-0.5">
+                                                <span className="opacity-70">ref</span> {ev.referer}
+                                            </div>
                                         )}
                                     </td>
-                                    <td className="px-6 py-4">
-                                        <div className="text-slate-300">{ev.sessions?.ip_address}</div>
-                                        <div className="text-[10px] text-slate-500">{ev.sessions?.country}</div>
+                                    <td>
+                                        <div className="text-fg whitespace-nowrap">{ev.sessions?.ip_address}</div>
+                                        <div className="text-[10px] text-muted">{ev.sessions?.country}</div>
                                     </td>
-                                    <td className="px-6 py-4">
+                                    <td>
                                         {ev.is_bot ? (
-                                            <span className="flex items-center gap-1 text-rose-500 bg-rose-500/10 px-2 py-1 rounded w-fit">
-                                                <ShieldAlert className="w-3 h-3" /> BOT
-                                            </span>
+                                            <span className="tag accent"><ShieldAlert className="w-3 h-3" /> bot</span>
                                         ) : (
-                                            <span className="flex items-center gap-1 text-cyan-500 bg-cyan-500/10 px-2 py-1 rounded w-fit">
-                                                <FileText className="w-3 h-3" /> HUMAN
-                                            </span>
+                                            <span className="tag"><User className="w-3 h-3" /> human</span>
                                         )}
                                     </td>
-                                    <td className="px-6 py-4 text-right">
-                                        <Link href={`/visitors/${ev.session_id}`} className="inline-flex items-center gap-1 text-slate-500 hover:text-cyan-400 transition-colors">
-                                            <LinkIcon className="w-3 h-3" /> Target
+                                    <td className="text-right">
+                                        <Link
+                                            href={`/visitors/${ev.session_id}`}
+                                            className="inline-flex items-center gap-1 font-sans text-[13px] text-muted hover:text-accent transition-colors"
+                                        >
+                                            Target <ChevronRight className="w-3.5 h-3.5" />
                                         </Link>
                                     </td>
                                 </tr>
                             ))}
                             {(!events || events.length === 0) && (
                                 <tr>
-                                    <td colSpan={5} className="px-6 py-12 text-center text-slate-500 italic">No events recorded.</td>
+                                    <td colSpan={5} className="py-12 text-center font-sans text-sm text-muted">No events recorded.</td>
                                 </tr>
                             )}
                         </tbody>

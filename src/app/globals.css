@@ -180,6 +180,83 @@ body {
   }
   .level.hot > span { background: var(--color-accent); opacity: 1; }
 
+  /* Small mono tag, e.g. OS / browser, human / bot. .accent for red. */
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 1px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--color-line);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    line-height: 16px;
+    color: var(--color-fg);
+    white-space: nowrap;
+  }
+  .tag.accent {
+    color: var(--color-accent);
+    background: var(--color-accent-soft);
+    border-color: var(--color-accent);
+  }
+
+  /* Buttons: quiet glass by default, solid red when .primary. */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 9px 16px;
+    border-radius: var(--radius-btn);
+    border: 1px solid var(--color-faint);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--color-fg);
+    font-size: 14px;
+    transition: transform 90ms, background-color 150ms, border-color 150ms;
+  }
+  .btn:hover { background: rgba(255, 255, 255, 0.10); }
+  .btn:active { transform: scale(0.97); }
+  .btn.primary { background: var(--color-accent); border-color: var(--color-accent); color: #fff; }
+  .btn.primary:hover { background: var(--color-accent-2); border-color: var(--color-accent-2); }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+  /* Text input on a dark well; red border on focus. */
+  .field {
+    width: 100%;
+    background: var(--color-well);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-btn);
+    color: var(--color-fg);
+    padding: 10px 14px;
+    outline: none;
+    transition: border-color 150ms, box-shadow 150ms;
+  }
+  .field::placeholder { color: var(--color-muted); opacity: 0.7; }
+  .field:focus { border-color: var(--color-accent); box-shadow: 0 0 0 3px rgba(242, 29, 67, 0.15); }
+
+  /* Data tables on glass: caption headers, hairline rows, mono cells. */
+  .ftable { width: 100%; text-align: left; font-size: 13px; border-collapse: collapse; }
+  .ftable thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    padding: 14px 18px;
+    font-weight: 400;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    white-space: nowrap;
+    background: rgba(14, 14, 18, 0.88);
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--color-line);
+  }
+  .ftable tbody tr { border-top: 1px solid var(--color-faint); transition: background-color 150ms; }
+  .ftable tbody tr:first-child { border-top: 0; }
+  .ftable tbody tr:hover { background: rgba(255, 255, 255, 0.04); }
+  .ftable td { padding: 12px 18px; vertical-align: middle; }
+
   /* Press feedback: a slight shrink, no ripple. */
   .pressable { transition: transform 90ms, background-color 150ms, border-color 150ms, color 150ms; }
   .pressable:active { transform: scale(0.97); }

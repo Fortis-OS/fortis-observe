@@ -41,63 +41,72 @@ export default async function BlogsPage() {
         .sort((a, b) => b.total - a.total);
 
     return (
-        <div className="p-6 space-y-6 min-h-full flex flex-col pb-10">
+        <div className="p-4 md:p-6 flex flex-col gap-6 min-h-full">
             <PageHeader title="Blog Intelligence" subtitle="Traffic analysis specifically filtered for your published articles." />
 
-            <div className="glass-panel overflow-hidden border border-slate-800">
-                <table className="w-full text-left text-sm text-slate-300">
-                    <thead className="text-xs uppercase bg-slate-900/80 text-slate-400 border-b border-slate-800">
-                        <tr>
-                            <th className="px-6 py-4 font-bold tracking-widest">Article Path</th>
-                            <th className="px-6 py-4 font-bold tracking-widest">Total Views</th>
-                            <th className="px-6 py-4 font-bold tracking-widest">Human vs Bot</th>
-                            <th className="px-6 py-4 font-bold tracking-widest">Read Time</th>
-                            <th className="px-6 py-4 font-bold tracking-widest">Scroll Depth</th>
-                            <th className="px-6 py-4 font-bold tracking-widest text-right">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-800/50 font-mono text-xs">
-                        {leaderboard.map((item, index) => {
-                            const humanPercent = Math.round(((item.total - item.bots) / item.total) * 100);
-                            return (
-                                <tr key={item.path} className="hover:bg-slate-800/30 transition-colors">
-                                    <td className="px-6 py-4 flex items-center gap-3">
-                                        <span className="text-slate-600 font-bold w-4">{index + 1}.</span>
-                                        <span className="text-emerald-400">{item.path}</span>
-                                    </td>
-                                    <td className="px-6 py-4 font-bold text-slate-200">
-                                        {item.total.toLocaleString()}
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-32 h-2 bg-rose-500/20 rounded-full overflow-hidden">
-                                                <div className="h-full bg-cyan-500" style={{ width: `${humanPercent}%` }}></div>
-                                            </div>
-                                            <span className="text-slate-500 text-[10px]">{humanPercent}% Human</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-6 py-4 font-mono text-emerald-400">
-                                        {item.formattedDuration}
-                                    </td>
-                                    <td className="px-6 py-4 font-mono text-cyan-400">
-                                        {item.avgScroll}%
-                                    </td>
-                                    <td className="px-6 py-4 text-right">
-                                        <Link href={`https://ganeshangadi.online${item.path}`} target="_blank" className="inline-flex items-center gap-2 text-slate-400 hover:text-cyan-400 transition-colors">
-                                            <Eye className="w-4 h-4" />
-                                            View Live
-                                        </Link>
-                                    </td>
-                                </tr>
-                            )
-                        })}
-                        {leaderboard.length === 0 && (
+            <div className="glass overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="ftable">
+                        <thead>
                             <tr>
-                                <td colSpan={6} className="px-6 py-12 text-center text-slate-500 italic">No blog traffic recorded yet.</td>
+                                <th>Article path</th>
+                                <th>Views</th>
+                                <th>Human vs bot</th>
+                                <th>Read time</th>
+                                <th>Scroll depth</th>
+                                <th className="text-right">Action</th>
                             </tr>
-                        )}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody className="font-mono text-xs">
+                            {leaderboard.map((item, index) => {
+                                const humanPercent = Math.round(((item.total - item.bots) / item.total) * 100);
+                                return (
+                                    <tr key={item.path}>
+                                        <td>
+                                            <div className="flex items-center gap-3">
+                                                <span className="text-muted w-5 shrink-0">{String(index + 1).padStart(2, "0")}</span>
+                                                <span className="text-fg">{item.path}</span>
+                                            </div>
+                                        </td>
+                                        <td className="text-fg text-[15px]">
+                                            {item.total.toLocaleString()}
+                                        </td>
+                                        <td>
+                                            <div className="flex items-center gap-3">
+                                                <div className="level w-28 shrink-0">
+                                                    <span className="!bg-accent !opacity-100" style={{ width: `${humanPercent}%` }} />
+                                                </div>
+                                                <span className="text-muted text-[10px] whitespace-nowrap">{humanPercent}% human</span>
+                                            </div>
+                                        </td>
+                                        <td className="text-fg">
+                                            {item.formattedDuration}
+                                        </td>
+                                        <td>
+                                            <div className="flex items-center gap-3">
+                                                <div className="level w-16 shrink-0">
+                                                    <span style={{ width: `${item.avgScroll}%` }} />
+                                                </div>
+                                                <span className="text-fg">{item.avgScroll}%</span>
+                                            </div>
+                                        </td>
+                                        <td className="text-right">
+                                            <Link href={`https://ganeshangadi.online${item.path}`} target="_blank" className="chip pressable hover:bg-faint hover:text-fg font-sans">
+                                                <Eye className="w-3.5 h-3.5" />
+                                                View live
+                                            </Link>
+                                        </td>
+                                    </tr>
+                                )
+                            })}
+                            {leaderboard.length === 0 && (
+                                <tr>
+                                    <td colSpan={6} className="py-12 text-center font-sans text-sm text-muted">No blog traffic recorded yet.</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );

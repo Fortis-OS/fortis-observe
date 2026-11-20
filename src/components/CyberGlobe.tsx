@@ -1,7 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Globe from "react-globe.gl";
+import { MeshPhongMaterial } from "three";
+
+// Frost palette for the globe
+const ACCENT = "#F21D43";
+const INK = "rgba(242, 242, 245, 0.85)";
 
 const COUNTRY_COORDS: Record<string, [number, number]> = {
   "US": [37.0902, -95.7129],
@@ -54,6 +59,14 @@ export default function CyberGlobe({ activeSessions = [] }: { activeSessions?: a
   const [countries, setCountries] = useState({ features: [] });
   const [dimensions, setDimensions] = useState({ width: 500, height: 500 });
 
+  // An obsidian sphere instead of the blue night-earth photo
+  const globeMaterial = useMemo(
+    () => new MeshPhongMaterial({ color: "#121216", emissive: "#060608", shininess: 6, specular: "#2a1016" }),
+    []
+  );
+  // A pulsing red ring at the hosting node
+  const rings = useMemo(() => [{ lat: MY_LAT, lng: MY_LNG }], []);
+
   useEffect(() => {
     // 1. Fetch GeoJSON for country borders
     fetch('https://raw.githubusercontent.com/vasturiano/react-globe.gl/master/example/datasets/ne_110m_admin_0_countries.geojson')
@@ -81,7 +94,8 @@ export default function CyberGlobe({ activeSessions = [] }: { activeSessions?: a
             startLng: MY_LNG,
             endLat: lat,
             endLng: lng,
-            color: ['#00e5ff', '#10b981', '#a855f7'][Math.floor(Math.random() * 3)],
+            // two series, like every Frost chart: red and white
+            color: Math.random() < 0.6 ? [ACCENT, 'rgba(242,29,67,0.25)'] : [INK, 'rgba(242,242,245,0.2)'],
             ip: session.ip_address
         };
     }).filter(arc => arc !== null);
@@ -113,30 +127,48 @@ export default function CyberGlobe({ activeSessions = [] }: { activeSessions?: a
         {dimensions.width > 0 && (
             <Globe
                 ref={globeEl}
-                globeImageUrl="//unpkg.com/three-globe/example/img/earth-dark.jpg"
+                globeImageUrl={null}
+                globeMaterial={globeMaterial}
                 backgroundColor="rgba(0,0,0,0)"
-                
-                // Country Hex Grid
+                atmosphereColor={ACCENT}
+                atmosphereAltitude={0.14}
+
+                // Land as a faint dot grid
                 hexPolygonsData={countries.features}
                 hexPolygonResolution={3}
-                hexPolygonMargin={0.7}
-                hexPolygonColor={() => '#0f172a'}
-                
-                // Neon Country Borders
+                hexPolygonMargin={0.62}
+                hexPolygonColor={() => 'rgba(242, 242, 245, 0.30)'}
+
+                // Hairline country borders in Frost red
                 polygonsData={countries.features}
-                polygonAltitude={0.01}
+                polygonAltitude={0.006}
                 polygonCapColor={() => 'rgba(0,0,0,0)'}
                 polygonSideColor={() => 'rgba(0,0,0,0)'}
-                polygonStrokeColor={() => '#00e5ff'} // Electric Cyan
-                
-                // Connection Arcs
+                polygonStrokeColor={() => 'rgba(242, 29, 67, 0.7)'}
+
+                // Visitor endpoints
+                pointsData={arcsData}
+                pointLat="endLat"
+                pointLng="endLng"
+                pointColor={() => ACCENT}
+                pointAltitude={0.01}
+                pointRadius={0.28}
+
+                // Connection arcs
                 arcsData={arcsData}
                 arcColor="color"
                 arcDashLength={0.4}
-                arcDashGap={0.1}
-                arcDashAnimateTime={2000}
-                arcStroke={0.5}
-                
+                arcDashGap={0.15}
+                arcDashAnimateTime={2200}
+                arcStroke={0.35}
+
+                // Hosting node
+                ringsData={rings}
+                ringColor={() => (t: number) => `rgba(242, 29, 67, ${1 - t})`}
+                ringMaxRadius={4}
+                ringPropagationSpeed={2}
+                ringRepeatPeriod={1400}
+
                 width={dimensions.width}
                 height={dimensions.height}
             />

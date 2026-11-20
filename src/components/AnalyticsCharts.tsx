@@ -1,152 +1,135 @@
 "use client";
 
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
+import type { ReactNode } from "react";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { BarList, Caption } from "@/components/ui";
 
-const COLORS = ['#06b6d4', '#10b981', '#a855f7', '#f43f5e', '#f59e0b', '#3b82f6'];
+type Datum = { name: string; value: number };
 
-export function AnalyticsCharts({ 
-    browsers, os, countries, visitorTypes = [], topPages = [], topReferrers = [] 
-}: { 
-    browsers: any[], os: any[], countries: any[], visitorTypes?: any[], topPages?: any[], topReferrers?: any[] 
+const ACCENT = "#F21D43";
+const MUTED = "#9A9AA6";
+
+// Frost glass tooltip
+const tooltipProps = {
+    cursor: { fill: "rgba(255,255,255,0.04)" },
+    contentStyle: {
+        background: "rgba(16,16,20,0.94)",
+        border: "1px solid rgba(255,255,255,0.12)",
+        borderRadius: 12,
+        color: "#F2F2F5",
+        fontSize: 12,
+        fontFamily: "var(--font-jetbrains), monospace",
+        backdropFilter: "blur(24px)",
+    },
+    labelStyle: { color: MUTED, marginBottom: 2 },
+    itemStyle: { color: "#F2F2F5", padding: 0 },
+};
+
+function Card({ title, right, className = "", children }: {
+    title: string;
+    right?: ReactNode;
+    className?: string;
+    children: ReactNode;
 }) {
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            
-            {/* Top Browsers */}
-            <div className="glass-panel p-6 border border-slate-800 flex flex-col h-80">
-                <h3 className="text-sm font-bold text-slate-300 tracking-widest uppercase mb-6">Top Browsers</h3>
-                <div className="flex-1 min-h-0">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                            <Pie
-                                data={browsers}
-                                cx="50%"
-                                cy="50%"
-                                innerRadius={60}
-                                outerRadius={80}
-                                paddingAngle={5}
-                                dataKey="value"
-                            >
-                                {browsers.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                ))}
-                            </Pie>
-                            <Tooltip 
-                                contentStyle={{ backgroundColor: '#020617', borderColor: '#1e293b', borderRadius: '0.5rem', color: '#f8fafc', fontSize: '12px' }}
-                                itemStyle={{ color: '#22d3ee' }}
-                            />
-                        </PieChart>
-                    </ResponsiveContainer>
-                </div>
-                <div className="mt-4 flex flex-wrap gap-3 justify-center text-xs font-mono">
-                    {browsers.map((b, i) => (
-                        <div key={b.name} className="flex items-center gap-1">
-                            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }}></span>
-                            <span className="text-slate-400">{b.name} ({b.value})</span>
-                        </div>
-                    ))}
-                </div>
+        <section className={`glass p-[18px] flex flex-col gap-4 ${className}`}>
+            <div className="flex items-center justify-between gap-3">
+                <Caption>{title}</Caption>
+                {right}
             </div>
+            {children}
+        </section>
+    );
+}
 
-            {/* Top Operating Systems */}
-            <div className="glass-panel p-6 border border-slate-800 flex flex-col h-80">
-                <h3 className="text-sm font-bold text-slate-300 tracking-widest uppercase mb-6">Operating Systems</h3>
+const toItems = (data: Datum[]) => data.map((d) => ({ name: d.name || "Unknown", value: d.value }));
+
+export function AnalyticsCharts({
+    browsers, os, countries, visitorTypes = [], topPages = [], topReferrers = []
+}: {
+    browsers: Datum[], os: Datum[], countries: Datum[], visitorTypes?: Datum[], topPages?: Datum[], topReferrers?: Datum[]
+}) {
+    const newCount = visitorTypes.find((v) => v.name === "New")?.value ?? 0;
+    const returningCount = visitorTypes.find((v) => v.name === "Returning")?.value ?? 0;
+    const visitorTotal = newCount + returningCount;
+    const returningShare = visitorTotal > 0 ? returningCount / visitorTotal : 0;
+
+    return (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
+
+            {/* Top regions: the one real chart */}
+            <Card title="Top regions" className="md:col-span-2 h-80">
                 <div className="flex-1 min-h-0">
                     <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={os} layout="vertical" margin={{ top: 0, right: 0, left: 20, bottom: 0 }}>
-                            <XAxis type="number" hide />
-                            <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 12 }} />
-                            <Tooltip 
-                                cursor={{ fill: '#1e293b' }}
-                                contentStyle={{ backgroundColor: '#020617', borderColor: '#1e293b', borderRadius: '0.5rem', color: '#f8fafc', fontSize: '12px' }}
+                        <BarChart data={countries} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
+                            <XAxis
+                                dataKey="name"
+                                axisLine={false}
+                                tickLine={false}
+                                tick={{ fill: MUTED, fontSize: 11, fontFamily: "var(--font-jetbrains), monospace" }}
                             />
-                            <Bar dataKey="value" fill="#a855f7" radius={[0, 4, 4, 0]} />
-                        </BarChart>
-                    </ResponsiveContainer>
-                </div>
-            </div>
-
-            {/* Top Countries */}
-            <div className="glass-panel p-6 border border-slate-800 flex flex-col h-80 lg:col-span-1 md:col-span-2">
-                <h3 className="text-sm font-bold text-slate-300 tracking-widest uppercase mb-6">Top Regions</h3>
-                <div className="flex-1 min-h-0">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={countries} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 10 }} />
                             <YAxis hide />
-                            <Tooltip 
-                                cursor={{ fill: '#1e293b' }}
-                                contentStyle={{ backgroundColor: '#020617', borderColor: '#1e293b', borderRadius: '0.5rem', color: '#f8fafc', fontSize: '12px' }}
+                            <Tooltip {...tooltipProps} />
+                            <Bar
+                                dataKey="value"
+                                name="sessions"
+                                fill={ACCENT}
+                                radius={[4, 4, 0, 0]}
+                                maxBarSize={36}
+                                background={{ fill: "rgba(255,255,255,0.05)", radius: 4 }}
                             />
-                            <Bar dataKey="value" fill="#10b981" radius={[4, 4, 0, 0]} />
                         </BarChart>
                     </ResponsiveContainer>
                 </div>
-            </div>
+            </Card>
 
-            {/* Returning vs New Visitors */}
-            <div className="glass-panel p-6 border border-slate-800 flex flex-col h-80 lg:col-span-1">
-                <h3 className="text-sm font-bold text-slate-300 tracking-widest uppercase mb-6">Visitor Retention</h3>
-                <div className="flex-1 min-h-0">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                            <Pie
-                                data={visitorTypes}
-                                cx="50%"
-                                cy="50%"
-                                innerRadius={50}
-                                outerRadius={80}
-                                paddingAngle={5}
-                                dataKey="value"
-                            >
-                                {visitorTypes.map((entry, index) => (
-                                    <Cell key={`cell-${index}`} fill={index === 0 ? '#10b981' : '#f59e0b'} />
-                                ))}
-                            </Pie>
-                            <Tooltip 
-                                contentStyle={{ backgroundColor: '#020617', borderColor: '#1e293b', borderRadius: '0.5rem', color: '#f8fafc', fontSize: '12px' }}
-                                itemStyle={{ color: '#22d3ee' }}
-                            />
-                        </PieChart>
-                    </ResponsiveContainer>
+            {/* New vs returning */}
+            <Card title="Visitor retention" className="md:h-80 justify-between gap-6">
+                <div className="flex flex-col gap-1">
+                    <div className="flex items-baseline gap-2">
+                        <span className="font-mono text-[44px] leading-none text-fg">{Math.round(returningShare * 100)}%</span>
+                        <span className="text-sm text-muted">come back</span>
+                    </div>
+                    <p className="text-xs text-muted">of {visitorTotal.toLocaleString()} sessions visited more than once</p>
                 </div>
-                <div className="mt-4 flex flex-wrap gap-3 justify-center text-xs font-mono">
-                    {visitorTypes.map((v, i) => (
-                        <div key={v.name} className="flex items-center gap-1">
-                            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: i === 0 ? '#10b981' : '#f59e0b' }}></span>
-                            <span className="text-slate-400">{v.name} ({v.value})</span>
-                        </div>
-                    ))}
+
+                <div className="flex flex-col gap-3">
+                    <div className="flex h-3 rounded-full overflow-hidden bg-faint gap-[2px]">
+                        {returningCount > 0 && <div className="bg-accent rounded-full" style={{ width: `${returningShare * 100}%` }} />}
+                        {newCount > 0 && <div className="bg-fill opacity-60 rounded-full flex-1" />}
+                    </div>
+                    <div className="flex items-center justify-between text-[12px]">
+                        <span className="flex items-center gap-1.5">
+                            <span className="dot text-accent" /> <span className="text-muted">Returning</span>
+                            <span className="font-mono text-fg">{returningCount.toLocaleString()}</span>
+                        </span>
+                        <span className="flex items-center gap-1.5">
+                            <span className="dot text-fill" /> <span className="text-muted">New</span>
+                            <span className="font-mono text-fg">{newCount.toLocaleString()}</span>
+                        </span>
+                    </div>
                 </div>
-            </div>
+            </Card>
 
-            {/* Top Pages */}
-            <div className="glass-panel p-6 border border-slate-800 flex flex-col h-80 lg:col-span-1">
-                <h3 className="text-sm font-bold text-slate-300 tracking-widest uppercase mb-4">Top Pages</h3>
-                <ul className="flex-1 overflow-y-auto space-y-3 font-mono text-xs pr-2">
-                    {topPages.map((page, i) => (
-                        <li key={page.name} className="flex justify-between items-center group">
-                            <span className="text-cyan-400 truncate pr-4" title={page.name}>{page.name}</span>
-                            <span className="text-slate-300 bg-slate-800/50 px-2 py-1 rounded">{page.value}</span>
-                        </li>
-                    ))}
-                    {topPages.length === 0 && <li className="text-slate-500 italic text-center mt-10">No page data available.</li>}
-                </ul>
-            </div>
+            <Card title="Top browsers">
+                <BarList items={toItems(browsers)} empty="No browser data available." />
+            </Card>
 
-            {/* Top Referrers */}
-            <div className="glass-panel p-6 border border-slate-800 flex flex-col h-80 lg:col-span-1">
-                <h3 className="text-sm font-bold text-slate-300 tracking-widest uppercase mb-4">Top Referrers</h3>
-                <ul className="flex-1 overflow-y-auto space-y-3 font-mono text-xs pr-2">
-                    {topReferrers.map((ref, i) => (
-                        <li key={ref.name} className="flex justify-between items-center">
-                            <span className="text-emerald-400 truncate pr-4 capitalize" title={ref.name}>{ref.name}</span>
-                            <span className="text-slate-300 bg-slate-800/50 px-2 py-1 rounded">{ref.value}</span>
-                        </li>
-                    ))}
-                    {topReferrers.length === 0 && <li className="text-slate-500 italic text-center mt-10">No referrer data available.</li>}
-                </ul>
-            </div>
+            <Card title="Operating systems">
+                <BarList items={toItems(os)} empty="No OS data available." />
+            </Card>
+
+            <Card title="Top referrers">
+                <BarList items={toItems(topReferrers)} empty="No referrer data available." />
+            </Card>
+
+            <Card title="Top pages" className="md:col-span-2 lg:col-span-3">
+                <BarList
+                    items={toItems(topPages).map((p, i) => ({ ...p, accent: i === 0 }))}
+                    empty="No page data available."
+                    className="font-mono"
+                />
+            </Card>
 
         </div>
     );

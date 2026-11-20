@@ -7,9 +7,9 @@ import { Globe2 } from "lucide-react";
 const CyberGlobe = dynamic(() => import("./CyberGlobe"), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-full flex flex-col items-center justify-center opacity-50">
-        <Globe2 className="w-16 h-16 text-cyan-500 animate-pulse mb-4" />
-        <p className="text-sm text-cyan-400 font-mono tracking-widest">INITIALIZING 3D RENDER...</p>
+    <div className="w-full h-full flex flex-col items-center justify-center ">
+        <Globe2 className="w-12 h-12 text-accent animate-pulse mb-4" />
+        <p className="caption">Initialising radar…</p>
     </div>
   )
 });

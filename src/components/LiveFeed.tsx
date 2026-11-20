@@ -1,26 +1,54 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabaseClient } from "@/lib/supabaseClient";
 
+type LiveEvent = { id: string; path: string; is_bot: boolean; timestamp: string };
+
+const POLL_MS = 4000;
+const KEEP = 50; // events kept on screen
+
+/**
+ * Polls /api/live (which needs a dashboard session) instead of subscribing
+ * to the events table from the browser, so the table needs no public access.
+ * Pauses while the tab is hidden.
+ */
 export function LiveFeed() {
-  const [events, setEvents] = useState<any[]>([]);
+  const [events, setEvents] = useState<LiveEvent[]>([]);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    // Subscribe to new INSERTS on the 'events' table
-    const channel = supabaseClient
-      .channel('realtime_events')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'events' }, (payload) => {
-        setEvents((prev) => {
-           const newEvents = [payload.new, ...prev];
-           return newEvents.slice(0, 50); // Keep last 50 events in memory to prevent DOM bloat
-        });
-      })
-      .subscribe();
+    let newest: string | null = null;
+    let stopped = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
 
-    // Cleanup subscription on unmount
+    async function poll() {
+      if (stopped) return;
+      if (document.visibilityState === "visible") {
+        try {
+          const url = newest ? `/api/live?since=${encodeURIComponent(newest)}` : "/api/live";
+          const res = await fetch(url, { cache: "no-store" });
+          if (res.ok && res.headers.get("content-type")?.includes("application/json")) {
+            const { events: fresh } = (await res.json()) as { events: LiveEvent[] };
+            if (fresh.length > 0) {
+              newest = fresh[0].timestamp;
+              setEvents((prev) => {
+                const seen = new Set(prev.map((e) => e.id));
+                return [...fresh.filter((e) => !seen.has(e.id)), ...prev].slice(0, KEEP);
+              });
+            }
+            setLoaded(true);
+          }
+        } catch {
+          // offline or signed out: try again next tick
+        }
+      }
+      if (!stopped) timer = setTimeout(poll, POLL_MS);
+    }
+
+    poll();
     return () => {
-      supabaseClient.removeChannel(channel);
+      stopped = true;
+      clearTimeout(timer);
     };
   }, []);
 
@@ -28,7 +56,7 @@ export function LiveFeed() {
      return (
        <div className="flex items-center justify-center gap-2 text-muted text-sm mt-10">
          <span className="dot live text-accent" />
-         Listening for telemetry…
+         {loaded ? "No events yet. Listening…" : "Listening for telemetry…"}
        </div>
      );
   }

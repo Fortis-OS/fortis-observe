@@ -26,3 +26,14 @@ export async function verifyToken(token: string) {
         return null;
     }
 }
+
+export const SESSION_COOKIE = 'fortis_token';
+
+/**
+ * For routes the login proxy lets through (everything under /api/auth):
+ * true only when the request carries a valid dashboard session cookie.
+ */
+export async function isAdminRequest(req: { cookies: { get(name: string): { value: string } | undefined } }) {
+    const token = req.cookies.get(SESSION_COOKIE)?.value;
+    return !!token && !!(await verifyToken(token));
+}

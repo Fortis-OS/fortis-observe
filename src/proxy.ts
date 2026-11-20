@@ -7,7 +7,11 @@ export async function proxy(request: NextRequest) {
     
     if (
         pathname.startsWith('/lockdown') || 
-        pathname.startsWith('/api/auth') || 
+        // Only the sign-in endpoints are public. Registering keys and the
+        // rest of /api/auth need a session like any other page.
+        pathname === '/api/auth/totp' ||
+        pathname === '/api/auth/webauthn/generate-authentication-options' ||
+        pathname === '/api/auth/webauthn/verify-authentication' ||
         pathname.startsWith('/api/telemetry') || // Allow external telemetry
         pathname.startsWith('/api/cron') ||      // Vercel Cron; the route checks CRON_SECRET itself
         pathname.startsWith('/_next') || 

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { statusColor, type SiteStatus } from "@/lib/siteStatus";
 import {
-    Activity, LayoutDashboard, Users, Clock, Search, Settings, FileText, BarChart2, MoreHorizontal, X,
+    Activity, LayoutDashboard, Users, Clock, Search, Settings, FileText, BarChart2, MoreHorizontal, X, LogOut,
     type LucideIcon,
 } from "lucide-react";
 
@@ -40,6 +40,23 @@ function Brand() {
                 <span className="caption mt-1 block !text-[10px]">Live telemetry</span>
             </span>
         </Link>
+    );
+}
+
+async function signOut() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    window.location.href = "/lockdown";
+}
+
+function SignOutButton() {
+    return (
+        <button
+            type="button"
+            onClick={signOut}
+            className="pressable w-full flex items-center gap-3 px-3 py-2 rounded-full text-[14px] text-muted hover:bg-faint hover:text-fg"
+        >
+            <LogOut className="w-4 h-4 shrink-0" /> Sign out
+        </button>
     );
 }
 
@@ -99,7 +116,8 @@ export function Sidebar({ status }: { status: SiteStatus }) {
                         })}
                     </nav>
 
-                    <div className="pt-4 mx-3 border-t border-faint">
+                    <div className="pt-3 mx-3 border-t border-faint flex flex-col gap-2">
+                        <SignOutButton />
                         <SystemStatus status={status} />
                     </div>
                 </div>
@@ -138,7 +156,8 @@ export function Sidebar({ status }: { status: SiteStatus }) {
                                 );
                             })}
                         </div>
-                        <div className="mt-3 pt-3 border-t border-faint">
+                        <div className="mt-3 pt-3 border-t border-faint flex flex-col gap-2">
+                            <SignOutButton />
                             <SystemStatus status={status} />
                         </div>
                     </div>

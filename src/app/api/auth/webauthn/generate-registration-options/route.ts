@@ -1,9 +1,14 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
+import { isAdminRequest } from "@/lib/jwt";
 import { generateRegistrationOptions } from "@simplewebauthn/server";
 import { cookies } from "next/headers";
 import { supabaseAdmin } from "@/lib/supabase";
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
+    // Adding a key is an admin action: /api/auth is outside the login proxy, so check here.
+    if (!(await isAdminRequest(req))) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     try {
         const url = new URL(req.url);
         const rpID = url.hostname;

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase";
 import { UAParser } from "ua-parser-js";
 import { getCorsHeaders } from "@/lib/cors";
+import { bodyTooLarge, throttled, parsePageView } from "@/lib/telemetryGuard";
 
 export async function OPTIONS(req: NextRequest) {
     return NextResponse.json({}, { headers: getCorsHeaders(req) });
@@ -14,18 +15,24 @@ export async function POST(req: NextRequest) {
     const corsHeaders = getCorsHeaders(req);
 
     try {
-        const body = await req.json();
-        const { visitorId, path, referer, userAgent, latencyMs } = body;
-
-        // 1. Validate required fields synchronously
-        if (!visitorId || !path) {
-            return NextResponse.json({ error: "Missing required fields" }, { status: 400, headers: corsHeaders });
-        }
-
-        // 2. Extract client-specific information synchronously before responding
+        // 1. Client IP first: it keys the throttle
         const ipAddress = req.headers.get("x-real-ip") || 
                           req.headers.get("x-forwarded-for")?.split(",")[0].trim() || 
                           "127.0.0.1";
+
+        if (bodyTooLarge(req)) {
+            return NextResponse.json({ error: "Payload too large" }, { status: 413, headers: corsHeaders });
+        }
+        if (throttled(ipAddress)) {
+            return NextResponse.json({ error: "Too many requests" }, { status: 429, headers: corsHeaders });
+        }
+
+        // 2. Validate and bound every field before it goes near the database
+        const view = parsePageView(await req.json().catch(() => null));
+        if (!view) {
+            return NextResponse.json({ error: "Invalid payload" }, { status: 400, headers: corsHeaders });
+        }
+        const { visitorId, path, referer, userAgent, latencyMs } = view;
 
         const vercelCountry = req.headers.get("x-vercel-ip-country") || "Unknown";
         const vercelCity = req.headers.get("x-vercel-ip-city") || "Unknown";
@@ -115,7 +122,7 @@ export async function POST(req: NextRequest) {
                     p_path: path,
                     p_referer: referer || "",
                     p_is_bot: finalIsBot,
-                    p_latency_ms: latencyMs || null,
+                    p_latency_ms: latencyMs ?? null,
                     p_backend_latency_ms: Math.round(performance.now() - receivedAt)
                 });
 

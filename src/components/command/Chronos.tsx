@@ -30,10 +30,15 @@ function greeting(hour: number) {
     return "Good night";
 }
 
+/** The current IST time, ticking every second; null on the server and before hydration. */
+export function useIstClock() {
+    const secs = useSyncExternalStore(subscribe, nowSeconds, serverSnapshot);
+    return secs == null ? null : parts(new Date(secs * 1000));
+}
+
 /** Frost's Chronos card: day, date, time with red seconds, greeting, and a 24-hour timeline. */
 export function Chronos({ name = "Ganesh", className = "" }: { name?: string; className?: string }) {
-    const secs = useSyncExternalStore(subscribe, nowSeconds, serverSnapshot);
-    const p = secs == null ? null : parts(new Date(secs * 1000));
+    const p = useIstClock();
     const dayFraction = p == null ? 0 : (p.h * 3600 + Number(p.hm.slice(3)) * 60 + Number(p.s)) / 86400;
 
     return (

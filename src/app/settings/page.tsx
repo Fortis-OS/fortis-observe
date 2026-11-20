@@ -49,31 +49,40 @@ export default function SettingsPage() {
     };
 
     return (
-        <div className="p-4 md:p-6 space-y-6">
+        <div className="p-4 md:p-6 flex flex-col gap-6">
             <PageHeader title="System Settings" subtitle="Security keys and access to this dashboard." />
 
-            <div className="max-w-xl glass-panel p-6 bg-slate-900/50 border border-slate-800 rounded-lg space-y-6">
-                <div>
-                    <h2 className="text-xl font-bold text-slate-100 flex items-center gap-2">
-                        <Fingerprint className="w-5 h-5 text-cyan-500" />
-                        Hardware Enclaves
-                    </h2>
-                    <p className="text-sm text-slate-400 mt-2">
-                        Bind a physical security key (YubiKey, TouchID, Windows Hello) to this dashboard. 
-                        Once registered, you can bypass the TOTP prompt using your hardware enclave.
-                    </p>
+            <section className="glass max-w-xl p-[18px] flex flex-col gap-5">
+                <div className="flex items-start gap-3">
+                    <span className="grid place-items-center w-10 h-10 shrink-0 rounded-full border border-accent bg-accent-soft text-accent">
+                        <Fingerprint className="w-5 h-5" />
+                    </span>
+                    <div>
+                        <h2 className="text-[18px] text-fg leading-tight">Security keys</h2>
+                        <p className="text-sm text-muted mt-1.5">
+                            Bind a physical security key (YubiKey, Touch ID, Windows Hello) to this dashboard.
+                            Once registered, you can unlock with it instead of the authenticator code.
+                        </p>
+                    </div>
                 </div>
 
-                {error && <div className="text-red-500 text-sm bg-red-500/10 p-3 rounded">{error}</div>}
-                {status && <div className="text-cyan-400 text-sm bg-cyan-900/20 p-3 rounded flex items-center gap-2"><ShieldCheck className="w-4 h-4" />{status}</div>}
+                {error && (
+                    <div role="alert" className="text-[13px] text-accent bg-accent-soft border border-accent/60 rounded-[12px] px-3 py-2">{error}</div>
+                )}
+                {status && (
+                    <div role="status" className="text-[13px] text-fg bg-white/5 border border-line rounded-[12px] px-3 py-2 flex items-center gap-2">
+                        <ShieldCheck className="w-4 h-4 text-ok shrink-0" />{status}
+                    </div>
+                )}
 
                 <button 
+                    type="button"
                     onClick={registerDevice}
-                    className="bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-2 px-4 rounded transition-colors"
+                    className="btn primary self-start"
                 >
-                    Register New Device
+                    Register new key
                 </button>
-            </div>
+            </section>
         </div>
     );
 }
